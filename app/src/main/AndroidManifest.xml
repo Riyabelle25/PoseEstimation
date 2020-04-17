@@ -20,10 +20,12 @@
     <activity
         android:name=".TestActivity"
         android:label="@string/tfe_pn_app_name"
-        android:exported="true">
+        android:exported="true"
+        android:screenOrientation="portrait">
     </activity>
 
-    <activity android:name=".CameraActivity" android:exported="true">
+    <activity android:name=".CameraActivity" android:exported="true"
+        android:screenOrientation="portrait">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
