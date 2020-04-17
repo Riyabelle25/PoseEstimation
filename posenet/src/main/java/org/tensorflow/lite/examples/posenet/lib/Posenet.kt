@@ -17,6 +17,7 @@ package org.tensorflow.lite.examples.posenet.lib
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.nfc.Tag
 import android.os.SystemClock
 import android.util.Log
 import java.io.FileInputStream
@@ -24,9 +25,9 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
-import kotlin.math.exp
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.GpuDelegate
+import kotlin.math.*
 
 enum class BodyPart {
   NOSE,
@@ -59,15 +60,24 @@ class KeyPoint {
   var score: Float = 0.0f
 }
 
+
+
 class Person {
   var keyPoints = listOf<KeyPoint>()
   var score: Float = 0.0f
+    var angle: Angle = Angle()
 }
 
 enum class Device {
   CPU,
   NNAPI,
   GPU
+}
+
+class Angle{
+    var keyPoint = listOf<KeyPoint>()
+    var Position: Position = Position()
+    var BodyPart: BodyPart = org.tensorflow.lite.examples.posenet.lib.BodyPart.LEFT_ELBOW
 }
 
 class Posenet(
@@ -215,6 +225,7 @@ class Posenet(
       String.format("Interpreter took %.2f ms", 1.0f * lastInferenceTimeNanos / 1_000_000)
     )
 
+
     val heatmaps = outputMap[0] as Array<Array<Array<FloatArray>>>
     val offsets = outputMap[1] as Array<Array<Array<FloatArray>>>
 
@@ -238,6 +249,7 @@ class Posenet(
         }
       }
       keypointPositions[keypoint] = Pair(maxRow, maxCol)
+
     }
 
     // Calculating the x and y coordinates of the keypoints with offset adjustment.
@@ -257,9 +269,14 @@ class Posenet(
           [positionX][idx + numKeypoints]
         ).toInt()
       confidenceScores[idx] = sigmoid(heatmaps[0][positionY][positionX][idx])
+
+
+
     }
 
+
     val person = Person()
+
     val keypointList = Array(numKeypoints) { KeyPoint() }
     var totalScore = 0.0f
     enumValues<BodyPart>().forEachIndexed { idx, it ->
@@ -268,11 +285,74 @@ class Posenet(
       keypointList[idx].position.y = yCoords[idx]
       keypointList[idx].score = confidenceScores[idx]
       totalScore += confidenceScores[idx]
+
     }
 
     person.keyPoints = keypointList.toList()
     person.score = totalScore / numKeypoints
 
-    return person
+    //Left-right hand raise algorithm:
+
+    //Right side
+    val keyPointA = person.keyPoints.get(6)     //right shoulder
+    val RS_xcd = keyPointA.position.x
+    val RS_ycd = keyPointA.position.y
+    val keyPointB = person.keyPoints.get(8)     //right elbow
+    val RE_xcd = keyPointB.position.x
+    val RE_ycd = keyPointB.position.y
+    val keyPointC = person.keyPoints.get(12)    //right hip
+    val RH_xcd = keyPointC.position.x
+    val RH_ycd = keyPointC.position.y
+
+    val AB_xcd = RS_xcd - RE_xcd
+    val AB_ycd = RS_ycd - RE_ycd
+
+    val AC_xcd = RS_xcd - RH_xcd
+    val AC_ycd = RS_ycd - RH_ycd
+
+    val cos_angle_BAC = ((AB_xcd*AC_xcd) + (AB_ycd * AC_ycd))/(sqrt(((AB_xcd*AB_xcd) + (AB_ycd *AB_ycd)).toDouble())*         //angle for right side
+            (sqrt(((AC_xcd*AC_xcd) + (AC_ycd *AC_ycd)).toDouble())))
+
+    val angle_BAC = acos(cos_angle_BAC)
+    val right_angle = angle_BAC.roundToInt()
+
+    Log.i("Angle BAC = ",  (angle_BAC*57.2958).toString())
+
+    //Left side
+    val keyPointD = person.keyPoints.get(5)     //left shoulder
+    val LS_xcd = keyPointD.position.x
+    val LS_ycd = keyPointD.position.y
+    val keyPointE = person.keyPoints.get(7)     //left elbow
+    val LE_xcd = keyPointE.position.x
+    val LE_ycd = keyPointE.position.y
+    val keyPointF = person.keyPoints.get(11)    //left hip
+    val LH_xcd = keyPointF.position.x
+    val LH_ycd = keyPointF.position.y
+
+    val DE_xcd = LS_xcd - LE_xcd
+    val DE_ycd = LS_ycd - LE_ycd
+
+    val DF_xcd = LS_xcd - LH_xcd
+    val DF_ycd = LS_ycd - LH_ycd
+
+    val cos_angle_EDF = ((DE_xcd*DF_xcd) + (DE_ycd * DF_ycd))/(sqrt(((DE_xcd*DE_xcd) + (DE_ycd *DE_ycd)).toDouble())*       //angle for Left side
+            (sqrt(((DF_xcd*DF_xcd) + (DF_ycd *DF_ycd)).toDouble())))
+
+    val angle_EDF = acos(cos_angle_EDF)
+    val left_angle = angle_EDF.roundToInt()
+
+    Log.i("Angle EDF = ",  (angle_EDF*57.2958).toString())
+
+    //Final result
+    if (angle_BAC*57.2958 >= 80 )
+    {Log.i("Final Result", "Right hand raised")}
+    else {Log.i("error", right_angle.toString())}
+
+    if(angle_EDF*57.2958 >= 80)
+    {Log.i("Final Result", "Left hand raised")}
+    else {Log.v("error", left_angle.toString())}
+
+     return person
+
   }
 }

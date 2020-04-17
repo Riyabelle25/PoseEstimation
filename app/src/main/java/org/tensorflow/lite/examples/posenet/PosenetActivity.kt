@@ -17,6 +17,7 @@
 package org.tensorflow.lite.examples.posenet
 
 import android.Manifest
+import android.annotation.TargetApi
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
@@ -40,6 +41,7 @@ import android.hardware.camera2.TotalCaptureResult
 import android.media.Image
 import android.media.ImageReader
 import android.media.ImageReader.OnImageAvailableListener
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -152,7 +154,7 @@ class PosenetActivity :
   private var flashSupported = false
 
   /** Orientation of the camera sensor.   */
-  private var sensorOrientation: Int? = null
+  private var sensorOrientation: Int? = 0
 
   /** Abstract interface to someone holding a display surface.    */
   private var surfaceHolder: SurfaceHolder? = null
@@ -267,13 +269,18 @@ class PosenetActivity :
     it == PackageManager.PERMISSION_GRANTED
   }
 
+
   /**
    * Sets up member variables related to camera.
    */
+  @TargetApi(Build.VERSION_CODES.P)
+  //@androidx.annotation.RequiresApi(Build.VERSION_CODES.P)
   private fun setUpCameraOutputs() {
 
     val activity = activity
     val manager = activity!!.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+
+
     try {
       for (cameraId in manager.cameraIdList) {
         val characteristics = manager.getCameraCharacteristics(cameraId)
@@ -281,10 +288,11 @@ class PosenetActivity :
         // We don't use a front facing camera in this sample.
         val cameraDirection = characteristics.get(CameraCharacteristics.LENS_FACING)
         if (cameraDirection != null &&
-          cameraDirection == CameraCharacteristics.LENS_FACING_FRONT
+          cameraDirection == CameraCharacteristics.LENS_FACING_BACK
         ) {
           continue
         }
+
 
         previewSize = Size(PREVIEW_WIDTH, PREVIEW_HEIGHT)
 
@@ -294,6 +302,7 @@ class PosenetActivity :
         )
 
         sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+        Log.i("sensorOrtn", sensorOrientation.toString())
 
         previewHeight = previewSize!!.height
         previewWidth = previewSize!!.width
@@ -434,11 +443,11 @@ class PosenetActivity :
 
       // Create rotated version for portrait display
       val rotateMatrix = Matrix()
-      rotateMatrix.postRotate(90.0f)
+      rotateMatrix.preRotate(270.0f)
 
       val rotatedBitmap = Bitmap.createBitmap(
         imageBitmap, 0, 0, previewWidth, previewHeight,
-        rotateMatrix, true
+      rotateMatrix, true
       )
       image.close()
 
@@ -572,6 +581,10 @@ class PosenetActivity :
       (70.0f * heightRatio + bottom),
       paint
     )
+//      canvas.drawText(
+//          "Angle: %s".format((posenet.angle))
+//
+//      )
 
     // Draw!
     surfaceHolder!!.unlockCanvasAndPost(canvas)
