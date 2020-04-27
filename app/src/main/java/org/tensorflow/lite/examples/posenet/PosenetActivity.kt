@@ -64,8 +64,7 @@ import org.tensorflow.lite.examples.posenet.lib.BodyPart
 import org.tensorflow.lite.examples.posenet.lib.Person
 import org.tensorflow.lite.examples.posenet.lib.Posenet
 
-class PosenetActivity :
-  Fragment(),
+class PosenetActivity : Fragment(),
   ActivityCompat.OnRequestPermissionsResultCallback {
 
   /** List of body joints that should be connected.    */
@@ -216,6 +215,8 @@ class PosenetActivity :
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     surfaceView = view.findViewById(R.id.surfaceView)
     surfaceHolder = surfaceView!!.holder
+    println("Here u go")
+
   }
 
   override fun onResume() {
@@ -325,7 +326,7 @@ class PosenetActivity :
    * Opens the camera specified by [PosenetActivity.cameraId].
    */
   private fun openCamera() {
-    val permissionCamera = ContextCompat.checkSelfPermission(activity!!, Manifest.permission.CAMERA)
+    val permissionCamera = ContextCompat.checkSelfPermission(activity!!,Manifest.permission.CAMERA )
     if (permissionCamera != PackageManager.PERMISSION_GRANTED) {
       requestCameraPermission()
     }

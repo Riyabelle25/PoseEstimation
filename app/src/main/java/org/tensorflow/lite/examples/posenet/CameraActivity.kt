@@ -17,15 +17,40 @@
 package org.tensorflow.lite.examples.posenet
 
 import android.os.Bundle
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentActivity
 import android.support.v7.app.AppCompatActivity
+import kotlinx.android.synthetic.main.tfe_pn_activity_camera.view.*
 
-class CameraActivity : AppCompatActivity() {
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import org.tensorflow.lite.examples.posenet.lib.Posenet
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setContentView(R.layout.tfe_pn_activity_camera)
-    savedInstanceState ?: supportFragmentManager.beginTransaction()
-      .replace(R.id.container, PosenetActivity())
-      .commit()
+class CameraActivity : Fragment(),View.OnClickListener {
+
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ): View? {
+      val v = inflater.inflate(R.layout.tfe_pn_activity_camera, container, false)
+      val button= v.findViewById<Button>(R.id.last) as Button
+
+     button.setOnClickListener(this)
+
+     print("clicked")
+      return v
   }
+
+      override fun onClick(v: View) {
+            activity!!.supportFragmentManager.beginTransaction()
+                .add(R.id.container1, PosenetActivity())
+                .commit()
+
+        }
+
 }
+
+

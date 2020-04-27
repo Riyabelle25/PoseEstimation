@@ -271,8 +271,12 @@ class Posenet(
     }
 
     person.keyPoints = keypointList.toList()
-    person.score = totalScore / numKeypoints
+    println("Here u go! ${keypointList.toList()}")
+    println("Here u go")
 
+    person.score = totalScore / numKeypoints
     return person
+
   }
+
 }
