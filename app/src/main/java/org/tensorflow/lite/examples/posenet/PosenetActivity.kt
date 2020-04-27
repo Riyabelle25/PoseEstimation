@@ -228,6 +228,8 @@ class PosenetActivity : Fragment(),
     super.onStart()
     openCamera()
     posenet = Posenet(this.context!!)
+
+
   }
 
   override fun onPause() {

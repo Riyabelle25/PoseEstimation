@@ -30,26 +30,26 @@ import org.tensorflow.lite.examples.posenet.lib.Posenet
 
 class CameraActivity : Fragment(),View.OnClickListener {
 
-  override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
-  ): View? {
-      val v = inflater.inflate(R.layout.tfe_pn_activity_camera, container, false)
-      val button= v.findViewById<Button>(R.id.last) as Button
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val v = inflater.inflate(R.layout.tfe_pn_activity_camera, container, false)
+        val button= v.findViewById<Button>(R.id.last) as Button
 
-     button.setOnClickListener(this)
+        button.setOnClickListener(this)
 
-     print("clicked")
-      return v
-  }
+        print("clicked")
+        return v
+    }
 
-      override fun onClick(v: View) {
-            activity!!.supportFragmentManager.beginTransaction()
-                .add(R.id.container1, PosenetActivity())
-                .commit()
+    override fun onClick(v: View) {
+        activity!!.supportFragmentManager.beginTransaction()
+            .add(R.id.container1, PosenetActivity())
+            .commit()
 
-        }
+    }
 
 }
 

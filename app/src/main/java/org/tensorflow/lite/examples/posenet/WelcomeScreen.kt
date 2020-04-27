@@ -16,9 +16,6 @@ class WelcomeScreen: AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .add(R.id.container, CameraActivity())
             .commit()
-
-
-
     }
 }
 
