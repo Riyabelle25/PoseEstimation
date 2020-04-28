@@ -21,25 +21,12 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.ImageFormat
-import android.graphics.Matrix
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.Rect
-import android.hardware.camera2.CameraAccessException
-import android.hardware.camera2.CameraCaptureSession
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraDevice
-import android.hardware.camera2.CameraManager
-import android.hardware.camera2.CaptureRequest
-import android.hardware.camera2.CaptureResult
-import android.hardware.camera2.TotalCaptureResult
+import android.graphics.*
+import android.hardware.camera2.*
 import android.media.Image
 import android.media.ImageReader
 import android.media.ImageReader.OnImageAvailableListener
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -50,19 +37,14 @@ import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.util.Size
 import android.util.SparseIntArray
-import android.view.LayoutInflater
-import android.view.Surface
-import android.view.SurfaceHolder
-import android.view.SurfaceView
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Toast
-import java.util.concurrent.Semaphore
-import java.util.concurrent.TimeUnit
-import kotlin.math.abs
 import org.tensorflow.lite.examples.posenet.lib.BodyPart
 import org.tensorflow.lite.examples.posenet.lib.Person
 import org.tensorflow.lite.examples.posenet.lib.Posenet
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 class PosenetActivity : Fragment(),
   ActivityCompat.OnRequestPermissionsResultCallback {
@@ -98,7 +80,8 @@ class PosenetActivity : Fragment(),
 
   /** An object for the Posenet library.    */
   private lateinit var posenet: Posenet
-
+  private lateinit var sounds: Sounds
+  private var n=0
   /** ID of the current [CameraDevice].   */
   private var cameraId: String? = null
 
@@ -228,8 +211,12 @@ class PosenetActivity : Fragment(),
     super.onStart()
     openCamera()
     posenet = Posenet(this.context!!)
+   // val mediaPlayer: MediaPlayer = MediaPlayer.create(context, soundID)
 
-
+    do{
+      n= Sounds.playSound(this.context!!, Sounds.transitionSounds)
+    }while (n==1)
+    onPause()
   }
 
   override fun onPause() {

@@ -63,6 +63,8 @@ class KeyPoint {
 }
 
 class Person {
+   public var right_angle: Int = 0
+   public var left_angle: Int =0
     var keyPoints = listOf<KeyPoint>()
     var score: Float = 0.0f
 }
@@ -72,6 +74,8 @@ enum class Device {
     NNAPI,
     GPU
 }
+
+
 
 class Posenet(
     val context: Context,
@@ -197,6 +201,8 @@ class Posenet(
      * returns:
      *      person: a Person object containing data about keypoint locations and confidence scores
      */
+
+
     fun estimateSinglePose(bitmap: Bitmap): Person {
         val estimationStartTimeNanos = SystemClock.elapsedRealtimeNanos()
         val inputArray = arrayOf(initInputArray(bitmap))
@@ -299,7 +305,10 @@ class Posenet(
                 (sqrt(((AC_xcd*AC_xcd) + (AC_ycd *AC_ycd)).toDouble())))
 
         val angle_BAC = acos(cos_angle_BAC)
-        val right_angle = (angle_BAC*57.2958).roundToInt()
+
+       person.right_angle = (angle_BAC*57.2958).roundToInt()
+
+
 
         Log.i("BAC(RHS angle)= ",  (angle_BAC*57.2958).toString())
 
@@ -324,18 +333,18 @@ class Posenet(
                 (sqrt(((DF_xcd*DF_xcd) + (DF_ycd *DF_ycd)).toDouble())))
 
         val angle_EDF = acos(cos_angle_EDF)
-        val left_angle = (angle_EDF*57.2958).roundToInt()
+        person.left_angle = (angle_EDF*57.2958).roundToInt()
 
         Log.i("EDF(LHS angle)=",  (angle_EDF*57.2958).toString())
 
         //Final result
         if (angle_BAC*57.2958 >= 80 )
         {Log.i("Final Result", "Right hand raised")}
-        else {Log.i("error", right_angle.toString())}
+        else {Log.i("error", person.right_angle.toString())}
 
         if(angle_EDF*57.2958 >= 80)
         {Log.i("Final Result", "Left hand raised")}
-        else {Log.v("error", left_angle.toString())}
+        else {Log.v("error", person.left_angle.toString())}
 
         if(angle_BAC*57.2958 >= 80 && angle_EDF*57.2958 >= 80)
         {
@@ -345,5 +354,7 @@ class Posenet(
         return person
 
     }
+
+
 
 }
