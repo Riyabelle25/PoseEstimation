@@ -30,6 +30,9 @@
       </intent-filter>
     </activity>
 
+    <service
+        android:name=".Sounds"
+        android:enabled="true" />
   </application>
 
 </manifest>

@@ -310,7 +310,7 @@ class Posenet(
 
 
 
-        Log.i("BAC(RHS angle)= ",  (angle_BAC*57.2958).toString())
+        Log.i("BAC(RHS angle)= ", (person.right_angle).toString())
 
         //Left side
         val keyPointD = person.keyPoints.get(5)     //left shoulder
@@ -335,7 +335,7 @@ class Posenet(
         val angle_EDF = acos(cos_angle_EDF)
         person.left_angle = (angle_EDF*57.2958).roundToInt()
 
-        Log.i("EDF(LHS angle)=",  (angle_EDF*57.2958).toString())
+        Log.i("EDF(LHS angle)=",(person.left_angle).toString())
 
         //Final result
         if (angle_BAC*57.2958 >= 80 )

@@ -20,6 +20,7 @@ import android.Manifest
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.*
 import android.hardware.camera2.*
@@ -27,9 +28,7 @@ import android.media.Image
 import android.media.ImageReader
 import android.media.ImageReader.OnImageAvailableListener
 import android.media.MediaPlayer
-import android.os.Bundle
-import android.os.Handler
-import android.os.HandlerThread
+import android.os.*
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.DialogFragment
 import android.support.v4.app.Fragment
@@ -46,8 +45,8 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
-class PosenetActivity : Fragment(),
-  ActivityCompat.OnRequestPermissionsResultCallback {
+ class PosenetActivity : Fragment(),
+  ActivityCompat.OnRequestPermissionsResultCallback,Runnable{
 
   /** List of body joints that should be connected.    */
   private val bodyJoints = listOf(
@@ -74,14 +73,18 @@ class PosenetActivity : Fragment(),
   /** Paint class holds the style and color information to draw geometries,text and bitmaps. */
   private var paint = Paint()
 
+
   /** A shape for extracting frame data.   */
   private val PREVIEW_WIDTH = 640
   private val PREVIEW_HEIGHT = 480
 
   /** An object for the Posenet library.    */
   private lateinit var posenet: Posenet
-  private lateinit var sounds: Sounds
+  private lateinit var person: Person
+  private lateinit var handler:Handler
   private var n=0
+  var RHS=0
+  var LHS=0
   /** ID of the current [CameraDevice].   */
   private var cameraId: String? = null
 
@@ -114,9 +117,11 @@ class PosenetActivity : Fragment(),
 
   /** An additional thread for running tasks that shouldn't block the UI.   */
   private var backgroundThread: HandlerThread? = null
+  private var audioThread: HandlerThread? = null
 
   /** A [Handler] for running tasks in the background.    */
   private var backgroundHandler: Handler? = null
+  private var audioHandler: Handler? = null
 
   /** An [ImageReader] that handles preview frame capture.   */
   private var imageReader: ImageReader? = null
@@ -193,41 +198,61 @@ class PosenetActivity : Fragment(),
     inflater: LayoutInflater,
     container: ViewGroup?,
     savedInstanceState: Bundle?
-  ): View? = inflater.inflate(R.layout.tfe_pn_activity_posenet, container, false)
+
+  ): View?{
+    val v= inflater.inflate(R.layout.tfe_pn_activity_posenet, container, false)
+    return  v
+  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     surfaceView = view.findViewById(R.id.surfaceView)
     surfaceHolder = surfaceView!!.holder
-    println("Here u go")
-
   }
 
   override fun onResume() {
     super.onResume()
     startBackgroundThread()
+    println("220")
   }
 
   override fun onStart() {
     super.onStart()
     openCamera()
+    println("219")
     posenet = Posenet(this.context!!)
-   // val mediaPlayer: MediaPlayer = MediaPlayer.create(context, soundID)
-
-    do{
-      n= Sounds.playSound(this.context!!, Sounds.transitionSounds)
-    }while (n==1)
-    onPause()
+    thread.start()
   }
+
+   var thread: Thread = object : Thread() {
+    override fun run() {
+      println("zu 248")
+      do {
+        val n = Sounds.playSound(context, Sounds.transitionSounds,RHS,LHS)
+        println("HI "+ n)
+      } while (n == 1)
+      Sounds.player = MediaPlayer.create(context, R.raw.gunshot)
+      println("HI' "+ n)
+      Sounds.player.start()
+    }
+  }
+
 
   override fun onPause() {
     closeCamera()
     stopBackgroundThread()
     super.onPause()
+    val intent =
+      Intent (this.context, Sounds::class.java)
+    this.context!!.stopService(intent)
   }
 
   override fun onDestroy() {
-    super.onDestroy()
+    val intent =
+      Intent (this.context, Sounds::class.java)
+    this.context?.stopService(intent)
+    println("240")
     posenet.close()
+    super.onDestroy()
   }
 
   private fun requestCameraPermission() {
@@ -271,7 +296,7 @@ class PosenetActivity : Fragment(),
         // We don't use a front facing camera in this sample.
         val cameraDirection = characteristics.get(CameraCharacteristics.LENS_FACING)
         if (cameraDirection != null &&
-          cameraDirection == CameraCharacteristics.LENS_FACING_FRONT
+          cameraDirection == CameraCharacteristics.LENS_FACING_BACK
         ) {
           continue
         }
@@ -326,7 +351,9 @@ class PosenetActivity : Fragment(),
       if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
         throw RuntimeException("Time out waiting to lock camera opening.")
       }
+      println("341")
       manager.openCamera(cameraId!!, stateCallback, backgroundHandler)
+
     } catch (e: CameraAccessException) {
       Log.e(TAG, e.toString())
     } catch (e: InterruptedException) {
@@ -364,7 +391,12 @@ class PosenetActivity : Fragment(),
     backgroundThread = HandlerThread("imageAvailableListener").also { it.start() }
     backgroundHandler = Handler(backgroundThread!!.looper)
   }
-
+/**
+  private fun startAudioThread() {
+    audioThread = HandlerThread("imageAvailableListener").also { it.start() }
+    audioHandler = Handler(audioThread!!.looper)
+  }
+  **/
   /**
    * Stops the background thread and its [Handler].
    */
@@ -424,7 +456,7 @@ class PosenetActivity : Fragment(),
 
       // Create rotated version for portrait display
       val rotateMatrix = Matrix()
-      rotateMatrix.postRotate(90.0f)
+      rotateMatrix.postRotate(270.0f)
 
       val rotatedBitmap = Bitmap.createBitmap(
         imageBitmap, 0, 0, previewWidth, previewHeight,
@@ -694,4 +726,8 @@ class PosenetActivity : Fragment(),
      */
     private const val TAG = "PosenetActivity"
   }
-}
+
+   override fun run() {
+     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+   }
+ }
