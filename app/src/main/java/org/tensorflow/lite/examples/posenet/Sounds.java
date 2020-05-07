@@ -4,18 +4,12 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
-import android.os.Message;
 import android.os.SystemClock;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Log;
 
 import java.util.Random;
-
-import org.tensorflow.lite.examples.posenet.lib.Posenet;
-import org.tensorflow.lite.examples.posenet.lib.Person;
 
 public class Sounds extends Service {
 
@@ -62,7 +56,7 @@ public class Sounds extends Service {
                 }
                 else if(n==1){
                     SystemClock.sleep(1000);
-                  //  RHS=person.getRight_angle();
+                  //  RHS=person.getRight_angle();ff
                     Log.d("zu: ", String.valueOf(RHS));
                     if(RHS<100){
                         Log.d("zu: ", "R1");

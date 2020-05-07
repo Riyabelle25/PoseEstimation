@@ -18,9 +18,9 @@ package org.tensorflow.lite.examples.posenet
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
-import android.support.v7.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.tfe_pn_activity_camera.view.*
 
 import android.view.LayoutInflater
@@ -49,10 +49,10 @@ class CameraActivity : Fragment(),View.OnClickListener {
 
         activity!!.supportFragmentManager.beginTransaction()
             .add(R.id.container1, PosenetActivity())
-            .commit()
+            .commit();
+
 
     }
-
 }
 
 
