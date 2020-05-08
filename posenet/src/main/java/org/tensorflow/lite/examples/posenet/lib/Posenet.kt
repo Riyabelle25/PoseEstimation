@@ -19,17 +19,25 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.SystemClock
 import android.util.Log
+import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.gpu.GpuDelegate
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
-import kotlin.math.exp
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.gpu.GpuDelegate
 import kotlin.math.acos
+import kotlin.math.exp
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
+
+//define states
+const val DOING_NOTHING = 0
+const val LEFT_HAND_RAISED = 1
+const val RIGHT_HAND_RAISED = 2
+const val BOTH_HAND_RAISED = 3
+
+const val ANGLETHREASHHOLD = 80
 
 enum class BodyPart {
     NOSE,
@@ -63,10 +71,11 @@ class KeyPoint {
 }
 
 class Person {
-   public var right_angle: Int = 0
-   public var left_angle: Int =0
+    //    var right_angle: Int = 0
+//    var left_angle: Int = 0
     var keyPoints = listOf<KeyPoint>()
     var score: Float = 0.0f
+    var state: Int = 0
 }
 
 enum class Device {
@@ -74,7 +83,6 @@ enum class Device {
     NNAPI,
     GPU
 }
-
 
 
 class Posenet(
@@ -97,7 +105,8 @@ class Posenet(
         val options = Interpreter.Options()
         options.setNumThreads(NUM_LITE_THREADS)
         when (device) {
-            Device.CPU -> { }
+            Device.CPU -> {
+            }
             Device.GPU -> {
                 gpuDelegate = GpuDelegate()
                 options.addDelegate(gpuDelegate)
@@ -199,7 +208,7 @@ class Posenet(
      * args:
      *      bitmap: image bitmap of frame that should be processed
      * returns:
-     *      person: a Person object containing data about keypoint locations and confidence scores
+     *      person: a @Person object containing data about keypoint locations and confidence scores
      */
 
 
@@ -284,14 +293,19 @@ class Posenet(
         println("Here u go")
 
         person.score = totalScore / numKeypoints
+        person.state = findstate(person)
 
-        val keyPointA = person.keyPoints.get(6)     //right shoulder
+        return person
+    }
+
+    private fun findstate(person: Person): Int {
+        val keyPointA = person.keyPoints[6]     //right shoulder
         val RS_xcd = keyPointA.position.x
         val RS_ycd = keyPointA.position.y
-        val keyPointB = person.keyPoints.get(8)     //right elbow
+        val keyPointB = person.keyPoints[8]     //right elbow
         val RE_xcd = keyPointB.position.x
         val RE_ycd = keyPointB.position.y
-        val keyPointC = person.keyPoints.get(12)    //right hip
+        val keyPointC = person.keyPoints[12]    //right hip
         val RH_xcd = keyPointC.position.x
         val RH_ycd = keyPointC.position.y
 
@@ -301,16 +315,20 @@ class Posenet(
         val AC_xcd = RS_xcd - RH_xcd
         val AC_ycd = RS_ycd - RH_ycd
 
-        val cos_angle_BAC = ((AB_xcd*AC_xcd) + (AB_ycd * AC_ycd))/(sqrt(((AB_xcd*AB_xcd) + (AB_ycd *AB_ycd)).toDouble()) *         //angle for right side
-                (sqrt(((AC_xcd*AC_xcd) + (AC_ycd *AC_ycd)).toDouble())))
+        val cos_angle_BAC =
+            ((AB_xcd * AC_xcd) + (AB_ycd * AC_ycd)) / (sqrt(((AB_xcd * AB_xcd) + (AB_ycd * AB_ycd)).toDouble()) *         //angle for right side
+                    (sqrt(((AC_xcd * AC_xcd) + (AC_ycd * AC_ycd)).toDouble())))
 
         val angle_BAC = acos(cos_angle_BAC)
 
-       person.right_angle = (angle_BAC*57.2958).roundToInt()
+        var right_angle: Int
+        right_angle = if (angle_BAC.isNaN()) {
+            0
+        } else (angle_BAC * 57.2958).roundToInt()
 
 
 
-        Log.i("BAC(RHS angle)= ", (person.right_angle).toString())
+        Log.i("BAC(RHS angle)= ", (right_angle).toString())
 
         //Left side
         val keyPointD = person.keyPoints.get(5)     //left shoulder
@@ -329,32 +347,42 @@ class Posenet(
         val DF_xcd = LS_xcd - LH_xcd
         val DF_ycd = LS_ycd - LH_ycd
 
-        val cos_angle_EDF = ((DE_xcd*DF_xcd) + (DE_ycd * DF_ycd))/(sqrt(((DE_xcd*DE_xcd) + (DE_ycd *DE_ycd)).toDouble()) *       //angle for Left side
-                (sqrt(((DF_xcd*DF_xcd) + (DF_ycd *DF_ycd)).toDouble())))
+        val cos_angle_EDF =
+            ((DE_xcd * DF_xcd) + (DE_ycd * DF_ycd)) / (sqrt(((DE_xcd * DE_xcd) + (DE_ycd * DE_ycd)).toDouble()) *       //angle for Left side
+                    (sqrt(((DF_xcd * DF_xcd) + (DF_ycd * DF_ycd)).toDouble())))
 
         val angle_EDF = acos(cos_angle_EDF)
-        person.left_angle = (angle_EDF*57.2958).roundToInt()
 
-        Log.i("EDF(LHS angle)=",(person.left_angle).toString())
+        var left_angle: Int
+        left_angle = if (angle_EDF.isNaN()) {
+            0
+        } else (angle_BAC * 57.2958).roundToInt()
+
+        Log.i("EDF(LHS angle)=", (left_angle).toString())
 
         //Final result
-        if (angle_BAC*57.2958 >= 80 )
-        {Log.i("Final Result", "Right hand raised")}
-        else {Log.i("error", person.right_angle.toString())}
-
-        if(angle_EDF*57.2958 >= 80)
-        {Log.i("Final Result", "Left hand raised")}
-        else {Log.v("error", person.left_angle.toString())}
-
-        if(angle_BAC*57.2958 >= 80 && angle_EDF*57.2958 >= 80)
-        {
-            Log.i ("Final result", "Both hands raised")
+        var state: Int = 0
+        if (ANGLETHREASHHOLD in (right_angle + 1)..left_angle) {
+            state = LEFT_HAND_RAISED
+            Log.i("Final Result", "Right hand raised")
+        } else {
+            Log.i("error", right_angle.toString())
         }
 
-        return person
+        if (ANGLETHREASHHOLD in (left_angle + 1)..right_angle) {
+            state = RIGHT_HAND_RAISED
+            Log.i("Final Result", "Left hand raised")
+        } else {
+            Log.v("error", left_angle.toString())
+        }
 
+        if (left_angle >= ANGLETHREASHHOLD && right_angle >= ANGLETHREASHHOLD) {
+            state = BOTH_HAND_RAISED
+            Log.i("Final result", "Both hands raised")
+        }
+
+        return state
     }
-
 
 
 }

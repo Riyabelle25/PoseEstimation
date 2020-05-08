@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@file:JvmName("Constants")
+//@file:JvmName("Constants")
 
 package org.tensorflow.lite.examples.posenet
 
@@ -24,3 +24,10 @@ const val REQUEST_CAMERA_PERMISSION = 1
 /** Model input shape for images.   */
 const val MODEL_WIDTH = 257
 const val MODEL_HEIGHT = 257
+
+const val DOING_NOTHING = 0
+const val LEFT_HAND_RAISED = 1
+const val RIGHT_HAND_RAISED = 2
+const val BOTH_HAND_RAISED = 3
+
+const val ANGLETHREASHHOLD = 80
