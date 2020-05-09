@@ -84,7 +84,7 @@ class PosenetActivity : Fragment(),
     private lateinit var posenet: Posenet
     private lateinit var person: Person
     private lateinit var handler: Handler
-    private var n = 0
+    var n = 0
     var RHS = 0
     var LHS = 0
 
@@ -223,16 +223,19 @@ class PosenetActivity : Fragment(),
         openCamera()
         println("219")
         posenet = Posenet(this.context!!)
+        person= Person()
         thread.start()
     }
 
     var thread: Thread = object : Thread() {
         override fun run() {
+            person= Person()
             println("zu 248")
             do {
-                val n = Sounds.playSound(context, Sounds.transitionSounds, RHS, LHS, person)
+                n = Sounds.playSound(context, Sounds.transitionSounds,person)
                 println("HI " + n)
             } while (n == 1)
+
             Sounds.player = MediaPlayer.create(context, R.raw.gunshot)
             println("HI' " + n)
             Sounds.player.start()

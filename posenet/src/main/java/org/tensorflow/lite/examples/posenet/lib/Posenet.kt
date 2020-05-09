@@ -71,8 +71,7 @@ class KeyPoint {
 }
 
 class Person {
-    //    var right_angle: Int = 0
-//    var left_angle: Int = 0
+
     var keyPoints = listOf<KeyPoint>()
     var score: Float = 0.0f
     var state: Int = 0
@@ -356,7 +355,7 @@ class Posenet(
         var left_angle: Int
         left_angle = if (angle_EDF.isNaN()) {
             0
-        } else (angle_BAC * 57.2958).roundToInt()
+        } else (angle_EDF * 57.2958).roundToInt()
 
         Log.i("EDF(LHS angle)=", (left_angle).toString())
 

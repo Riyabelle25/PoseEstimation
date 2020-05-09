@@ -17,7 +17,7 @@ import java.util.Random;
 public class Sounds extends Service {
 
     public static final int[] transitionSounds = {R.raw.bass_l, R.raw.bass_r};
-    //  private static int LHS,RHS;
+    //  note: first sound in
     static MediaPlayer player, mediaPlayer;
 
     private static final String TAG = "SOUNDS_TAG";
@@ -34,55 +34,44 @@ public class Sounds extends Service {
     }
 
     // If an array is passed, pick one at random to play.
-    public static int playSound(Context context, int[] sounds, int RHS, int LHS, Person person) {
+    public static int playSound(Context context, int[] sounds,Person person) {
         int n = new Random().nextInt(sounds.length);
         int soundID = sounds[n];
-        return playSound(context, soundID, n, RHS, LHS, person);
+        return playSound(context, soundID, n, person);
     }
 
-    private static int playSound(Context context, int soundID, int n, int RHS, int LHS, Person person) {
+    private static int playSound(Context context, int soundID, int n, Person person) {
         // Only play if the user has sounds enabled.
         try {
+
             mediaPlayer = MediaPlayer.create(context, soundID);
             mediaPlayer.start();
+
             if (n == 0) {
+
                 SystemClock.sleep(1000);
-                // LHS=person.getLeft_angle();
-                Log.d("zu: ", String.valueOf(LHS));
+                Log.d("state obtained: ", String.valueOf(person.getState()));
 
-                //use
-                // if(person.getState() == ConstantsKt.BOTH_HAND_RAISED) etc
-                /*
-
-
-
-
-                Ye idhar dekho
-
-                func has no need for LHS RHS
-                use state instead
-
-
-
-
-                 */
-
-                if (LHS < 100) {
-                    Log.d("zu: ", "L1");
-                    return 1;
-                } else {
-                    Log.d("zu: ", "L0");
-                    return 0;
+                         if(person.getState()==ConstantsKt.LEFT_HAND_RAISED){
+                            Log.d("correct hand raised: ", "Left");
+                            return 1;
                 }
-            } else if (n == 1) {
+                             else {
+                             Log.d("wrong hand raised: ", "Right");
+                            return 0;
+                }
+            }
+
+            else if (n == 1) {
+
                 SystemClock.sleep(1000);
-                //  RHS=person.getRight_angle();ff
-                Log.d("zu: ", String.valueOf(RHS));
-                if (RHS < 100) {
-                    Log.d("zu: ", "R1");
+                Log.d("state obtained : ", String.valueOf(person.getState()));
+
+                if(person.getState()==ConstantsKt.RIGHT_HAND_RAISED){
+                    Log.d("correct hand raised: ", "Right");
                     return 1;
                 } else {
-                    Log.d("zu: ", "R2");
+                    Log.d("wrong hand raised: ", "Left");
                     return 0;
                 }
 
